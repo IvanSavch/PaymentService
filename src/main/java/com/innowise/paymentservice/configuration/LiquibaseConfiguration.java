@@ -18,15 +18,14 @@ public class LiquibaseConfiguration {
     public Liquibase liquibase() {
 
         MongoDatabase mongoDatabase;
-        try (MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017")) {
+        MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
             mongoDatabase = mongoClient.getDatabase("payment");
-        }
 
-        MongoConnection connection = new MongoConnection();
-        connection.setMongoDatabase(mongoDatabase);
+            MongoConnection connection = new MongoConnection();
+            connection.setMongoDatabase(mongoDatabase);
 
-        Database database = new MongoLiquibaseDatabase();
-        database.setConnection(connection);
+            Database database = new MongoLiquibaseDatabase();
+            database.setConnection(connection);
 
         return new Liquibase(
                 "db/changelog/db.changelog-master.yaml",
