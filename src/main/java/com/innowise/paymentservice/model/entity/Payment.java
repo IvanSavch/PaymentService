@@ -1,4 +1,4 @@
-package com.innowise.paymentservice.entity;
+package com.innowise.paymentservice.model.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,9 +21,9 @@ public class Payment {
     @Id
     private String id;
     @Indexed
-    private String orderId;
+    private Long orderId;
     @Indexed
-    private String userId;
+    private Long userId;
     private Status status;
     private LocalDateTime timestamp;
     @Field(targetType = FieldType.DECIMAL128)

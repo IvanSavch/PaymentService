@@ -17,9 +17,8 @@ public class LiquibaseConfiguration {
     @Bean
     public Liquibase liquibase() {
 
-        MongoDatabase mongoDatabase;
         MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
-            mongoDatabase = mongoClient.getDatabase("payment");
+        MongoDatabase mongoDatabase = mongoClient.getDatabase("payment");
 
             MongoConnection connection = new MongoConnection();
             connection.setMongoDatabase(mongoDatabase);
@@ -27,14 +26,13 @@ public class LiquibaseConfiguration {
             Database database = new MongoLiquibaseDatabase();
             database.setConnection(connection);
 
-        return new Liquibase(
-                "db/changelog/db.changelog-master.yaml",
+        return new Liquibase("db/changelog/db.changelog-master.yaml",
                 new ClassLoaderResourceAccessor(),
                 database);
 
     }
     @Bean
-    CommandLineRunner runLiquibase(Liquibase liquibase) {
+    public CommandLineRunner runLiquibase(Liquibase liquibase) {
         return args -> liquibase.update();
     }
 }
