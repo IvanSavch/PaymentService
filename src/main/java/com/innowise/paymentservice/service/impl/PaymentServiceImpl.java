@@ -2,20 +2,21 @@ package com.innowise.paymentservice.service.impl;
 
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.model.dto.PaymentDto;
+import com.innowise.paymentservice.model.dto.TotalSumDto;
 import com.innowise.paymentservice.model.entity.Payment;
 import com.innowise.paymentservice.repository.PaymentRepository;
+import com.innowise.paymentservice.service.PaymentService;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class PaymentService {
+public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
 
-    public PaymentService(PaymentRepository paymentRepository, PaymentMapper paymentMapper) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, PaymentMapper paymentMapper) {
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
     }
@@ -25,25 +26,21 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    public Payment findByUserId(Long userId) {
-        return paymentRepository.findByUserId(userId).orElseThrow();
+    public List<Payment> findAllByUserId(Long userId) {
+        return paymentRepository.findAllByUserId(userId);
     }
 
-    public Payment findByOrderId(Long orderId) {
-        return paymentRepository.findByOrderId(orderId).orElseThrow();
+    public List<Payment> findAllByOrderId(Long orderId) {
+        return paymentRepository.findAllByOrderId(orderId);
     }
 
     public List<Payment> findByStatus(Payment.Status status) {
         return paymentRepository.findAllByStatus(status);
     }
-    public BigDecimal getTotalSumForUser(Long userId, LocalDateTime from,LocalDateTime to){
-        BigDecimal totalPayments = paymentRepository.getTotalSumForUser(userId, from, to);
-//        Payment payment = paymentRepository.findByUserId(userId).orElseThrow();
-//        payment.setPaymentAmount(totalPayments);
-        return totalPayments;
+    public TotalSumDto getTotalSumForUser(Long userId, LocalDateTime from,LocalDateTime to){
+        return paymentRepository.getTotalSumForUser(userId, from, to).orElseThrow();
     }
-    public BigDecimal getTotalSumForAllUsers(LocalDateTime from,LocalDateTime to){
-        BigDecimal totalSum = paymentRepository.getTotalSum(from, to);
-        return totalSum;
+    public TotalSumDto getTotalSumForAllUsers(LocalDateTime from,LocalDateTime to){
+        return paymentRepository.getTotalSum(from, to).orElseThrow();
     }
 }
