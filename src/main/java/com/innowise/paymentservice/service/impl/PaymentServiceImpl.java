@@ -1,6 +1,7 @@
 package com.innowise.paymentservice.service.impl;
 
 import com.innowise.paymentservice.client.RandomClient;
+import com.innowise.paymentservice.exception.ResourceNotFoundException;
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.model.dto.PaymentDto;
 import com.innowise.paymentservice.model.dto.TotalSumDto;
@@ -27,7 +28,7 @@ public class PaymentServiceImpl implements PaymentService {
     public Payment createPayment(PaymentDto paymentDto) {
         Payment payment = paymentMapper.toPayment(paymentDto);
         int random = randomClient.random();
-        if (random %2 == 0) {
+        if (random % 2 == 0) {
             payment.setStatus(Payment.Status.SUCCESS);
             return paymentRepository.save(payment);
         }
@@ -48,10 +49,12 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     public TotalSumDto getTotalSumForUser(Long userId, LocalDateTime from, LocalDateTime to) {
-        return paymentRepository.getTotalSumForUser(userId, from, to).orElseThrow();
+        return paymentRepository.getTotalSumForUser(userId, from, to)
+                .orElseThrow(() -> new ResourceNotFoundException("Payments not found for user " + userId));
     }
 
     public TotalSumDto getTotalSumForAllUsers(LocalDateTime from, LocalDateTime to) {
-        return paymentRepository.getTotalSum(from, to).orElseThrow();
+        return paymentRepository.getTotalSum(from, to)
+                .orElseThrow(() -> new ResourceNotFoundException("Payments not found for period"));
     }
 }
