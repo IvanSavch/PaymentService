@@ -1,5 +1,6 @@
 package com.innowise.paymentservice.service.impl;
 
+import com.innowise.paymentservice.client.RandomClient;
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.model.dto.PaymentDto;
 import com.innowise.paymentservice.model.dto.TotalSumDto;
@@ -13,16 +14,24 @@ import java.util.List;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
+    private final RandomClient randomClient;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, PaymentMapper paymentMapper) {
+    public PaymentServiceImpl(RandomClient randomClient, PaymentRepository paymentRepository, PaymentMapper paymentMapper) {
+        this.randomClient = randomClient;
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
     }
 
     public Payment createPayment(PaymentDto paymentDto) {
         Payment payment = paymentMapper.toPayment(paymentDto);
+        int random = randomClient.random();
+        if (random %2 == 0) {
+            payment.setStatus(Payment.Status.SUCCESS);
+            return paymentRepository.save(payment);
+        }
+        payment.setStatus(Payment.Status.FAILED);
         return paymentRepository.save(payment);
     }
 
@@ -37,10 +46,12 @@ public class PaymentServiceImpl implements PaymentService {
     public List<Payment> findByStatus(Payment.Status status) {
         return paymentRepository.findAllByStatus(status);
     }
-    public TotalSumDto getTotalSumForUser(Long userId, LocalDateTime from,LocalDateTime to){
+
+    public TotalSumDto getTotalSumForUser(Long userId, LocalDateTime from, LocalDateTime to) {
         return paymentRepository.getTotalSumForUser(userId, from, to).orElseThrow();
     }
-    public TotalSumDto getTotalSumForAllUsers(LocalDateTime from,LocalDateTime to){
+
+    public TotalSumDto getTotalSumForAllUsers(LocalDateTime from, LocalDateTime to) {
         return paymentRepository.getTotalSum(from, to).orElseThrow();
     }
 }

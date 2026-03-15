@@ -29,6 +29,6 @@ public class Payment {
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal paymentAmount;
     public enum Status {
-        OK, NOT_OK
+        SUCCESS, FAILED
     }
 }
