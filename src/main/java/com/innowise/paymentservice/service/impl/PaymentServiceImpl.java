@@ -1,9 +1,11 @@
 package com.innowise.paymentservice.service.impl;
 
+import com.innowise.paymentservice.client.OrderClient;
 import com.innowise.paymentservice.client.RandomClient;
 import com.innowise.paymentservice.exception.ResourceNotFoundException;
+import com.innowise.paymentservice.kafka.PaymentKafkaProducer;
 import com.innowise.paymentservice.mapper.PaymentMapper;
-import com.innowise.paymentservice.model.dto.PaymentDto;
+
 import com.innowise.paymentservice.model.dto.TotalSumDto;
 import com.innowise.paymentservice.model.entity.Payment;
 import com.innowise.paymentservice.repository.PaymentRepository;
@@ -18,22 +20,36 @@ public class PaymentServiceImpl implements PaymentService {
     private final RandomClient randomClient;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
+    private final PaymentKafkaProducer paymentKafkaProducer;
+    private final OrderClient orderClient;
 
-    public PaymentServiceImpl(RandomClient randomClient, PaymentRepository paymentRepository, PaymentMapper paymentMapper) {
+    public PaymentServiceImpl(RandomClient randomClient, PaymentRepository paymentRepository, PaymentMapper paymentMapper, PaymentKafkaProducer paymentKafkaProducer, OrderClient orderClient) {
         this.randomClient = randomClient;
         this.paymentRepository = paymentRepository;
         this.paymentMapper = paymentMapper;
+        this.paymentKafkaProducer = paymentKafkaProducer;
+        this.orderClient = orderClient;
     }
 
-    public Payment createPayment(PaymentDto paymentDto) {
-        Payment payment = paymentMapper.toPayment(paymentDto);
-        int random = randomClient.random();
-        if (random % 2 == 0) {
-            payment.setStatus(Payment.Status.SUCCESS);
-            return paymentRepository.save(payment);
+    public List<Payment> createPayment() {
+
+        List<Payment> paymentFromOrderDtoList = paymentMapper.toPaymentFromOrderDtoList(orderClient.findOrderByUserId());
+
+        for (Payment payment : paymentFromOrderDtoList) {
+            int random = randomClient.random();
+            payment.setTimestamp(LocalDateTime.now());
+            if (random % 2 == 0) {
+                payment.setStatus(Payment.Status.SUCCESS);
+
+            } else {
+                payment.setStatus(Payment.Status.FAILED);
+
+            }
         }
-        payment.setStatus(Payment.Status.FAILED);
-        return paymentRepository.save(payment);
+        List<Payment> savedPayments = paymentRepository.saveAll(paymentFromOrderDtoList);
+
+        savedPayments.forEach(paymentKafkaProducer::send);
+        return savedPayments;
     }
 
     public List<Payment> findAllByUserId(Long userId) {

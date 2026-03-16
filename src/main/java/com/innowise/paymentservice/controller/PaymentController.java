@@ -8,10 +8,10 @@ import com.innowise.paymentservice.model.entity.Payment;
 import com.innowise.paymentservice.service.PaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,9 +31,10 @@ public class PaymentController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<PaymentDto> createPayment(@RequestBody PaymentDto paymentDto) {
-        Payment payment = paymentService.createPayment(paymentDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(paymentMapper.toPaymentDto(payment));
+    @PreAuthorize("@authenticationServiceImpl.adminRole(authentication) or @authenticationServiceImpl.isSelf(#id, authentication)")
+    public ResponseEntity<List<PaymentDto>> createPayment() {
+        List<Payment> payment = paymentService.createPayment();
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentMapper.toPaymentDtoList(payment));
     }
 
     @GetMapping("/users/{userId}")

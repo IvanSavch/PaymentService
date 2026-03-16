@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-public class RandomServiceConfiguration {
+public class PaymentServiceClientConfiguration {
     @Bean
     public RestTemplate restTemplate(){
         return new RestTemplate();
