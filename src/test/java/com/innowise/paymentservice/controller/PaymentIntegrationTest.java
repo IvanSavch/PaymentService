@@ -1,6 +1,7 @@
 package com.innowise.paymentservice.controller;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.innowise.paymentservice.client.OrderClient;
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.model.dto.PaymentDto;
 import com.innowise.paymentservice.model.dto.TotalSumDto;
@@ -58,7 +59,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public class PaymentIntegrationTest {
     @MockitoBean
     private PaymentService paymentService;
-
+    @MockitoBean
+    private OrderClient orderClient;
     @MockitoBean
     private PaymentMapper paymentMapper;
     @MockitoBean
