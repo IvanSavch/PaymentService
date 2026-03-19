@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
-  @Override
+    @Override
     public boolean adminRole(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -23,4 +23,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Long id = (Long) authentication.getPrincipal();
         return userId.equals(id);
     }
+
 }

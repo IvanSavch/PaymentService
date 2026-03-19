@@ -1,6 +1,8 @@
 package com.innowise.paymentservice.client;
 
+import com.innowise.paymentservice.exception.ServiceUnavailableException;
 import com.innowise.paymentservice.model.dto.OrderDto;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -25,10 +27,10 @@ public class OrderClient {
     public OrderClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
-
+    @CircuitBreaker(name = "orderService", fallbackMethod = "orderServiceFallBack")
     public List<OrderDto> findOrderByUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = (Long) authentication.getPrincipal();
+        Long userId = Long.parseLong(authentication.getName());
         List<String> collect = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
@@ -42,5 +44,8 @@ public class OrderClient {
                 httpEntity,
                 new ParameterizedTypeReference<List<OrderDto>>() {},
                 userId).getBody();
+    }
+    public List<OrderDto> orderServiceFallBack(Throwable t){
+        throw new ServiceUnavailableException("Order service is unavailable");
     }
 }

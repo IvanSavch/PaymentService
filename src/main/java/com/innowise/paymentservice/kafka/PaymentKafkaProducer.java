@@ -12,6 +12,6 @@ public class PaymentKafkaProducer {
         this.kafkaTemplate = kafkaTemplate;
     }
     public void send(Payment payment){
-        kafkaTemplate.send("CREATE_PAYMENT",payment);
+        kafkaTemplate.send("CREATE_PAYMENT",payment.getId(),payment);
     }
 }

@@ -8,16 +8,19 @@ import liquibase.database.Database;
 import liquibase.ext.mongodb.database.MongoConnection;
 import liquibase.ext.mongodb.database.MongoLiquibaseDatabase;
 import liquibase.resource.ClassLoaderResourceAccessor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class LiquibaseConfiguration {
+    @Value("${mongodb.url}")
+    private String mongodbUrl;
     @Bean
     public Liquibase liquibase() {
 
-        MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+        MongoClient mongoClient = MongoClients.create(mongodbUrl);
         MongoDatabase mongoDatabase = mongoClient.getDatabase("payment");
 
             MongoConnection connection = new MongoConnection();

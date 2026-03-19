@@ -5,7 +5,6 @@ import com.innowise.paymentservice.client.RandomClient;
 import com.innowise.paymentservice.exception.ResourceNotFoundException;
 import com.innowise.paymentservice.kafka.PaymentKafkaProducer;
 import com.innowise.paymentservice.mapper.PaymentMapper;
-
 import com.innowise.paymentservice.model.dto.TotalSumDto;
 import com.innowise.paymentservice.model.entity.Payment;
 import com.innowise.paymentservice.repository.PaymentRepository;
@@ -17,6 +16,7 @@ import java.util.List;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
+
     private final RandomClient randomClient;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
@@ -32,11 +32,9 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     public List<Payment> createPayment() {
-
+        int random = randomClient.random();
         List<Payment> paymentFromOrderDtoList = paymentMapper.toPaymentFromOrderDtoList(orderClient.findOrderByUserId());
-
         for (Payment payment : paymentFromOrderDtoList) {
-            int random = randomClient.random();
             payment.setTimestamp(LocalDateTime.now());
             if (random % 2 == 0) {
                 payment.setStatus(Payment.Status.SUCCESS);

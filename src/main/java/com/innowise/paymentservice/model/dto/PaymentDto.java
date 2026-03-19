@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -17,6 +18,7 @@ public class PaymentDto {
     private Long orderId;
     private Long userId;
     private Payment.Status status;
+    private LocalDateTime time;
     @Field(targetType = FieldType.DECIMAL128)
     @PositiveOrZero(message = "Payment amount can't be negative")
     private BigDecimal paymentAmount;

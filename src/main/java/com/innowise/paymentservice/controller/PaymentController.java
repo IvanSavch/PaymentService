@@ -2,7 +2,6 @@ package com.innowise.paymentservice.controller;
 
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.model.dto.PaymentDto;
-
 import com.innowise.paymentservice.model.dto.TotalSumDto;
 import com.innowise.paymentservice.model.entity.Payment;
 import com.innowise.paymentservice.service.PaymentService;
@@ -31,31 +30,34 @@ public class PaymentController {
     }
 
     @PostMapping("/")
-    @PreAuthorize("@authenticationServiceImpl.adminRole(authentication) or @authenticationServiceImpl.isSelf(#id, authentication)")
     public ResponseEntity<List<PaymentDto>> createPayment() {
         List<Payment> payment = paymentService.createPayment();
         return ResponseEntity.status(HttpStatus.CREATED).body(paymentMapper.toPaymentDtoList(payment));
     }
 
     @GetMapping("/users/{userId}")
+    @PreAuthorize("@authenticationServiceImpl.adminRole(authentication) or @authenticationServiceImpl.isSelf(#userId, authentication)")
     public ResponseEntity<List<PaymentDto>> findByUserId(@PathVariable Long userId) {
         List<Payment> byUserId = paymentService.findAllByUserId(userId);
         return ResponseEntity.ok(paymentMapper.toPaymentDtoList(byUserId));
     }
 
     @GetMapping("/orders/{orderId}")
+    @PreAuthorize("@authenticationServiceImpl.adminRole(authentication)")
     public ResponseEntity<List<PaymentDto>> findByOrderId(@PathVariable Long orderId) {
         List<Payment> byOrderId = paymentService.findAllByOrderId(orderId);
         return ResponseEntity.ok(paymentMapper.toPaymentDtoList(byOrderId));
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<PaymentDto>> findByOrderId(@PathVariable Payment.Status status) {
+    @PreAuthorize("@authenticationServiceImpl.adminRole(authentication)")
+    public ResponseEntity<List<PaymentDto>> findByStatus(@PathVariable("status") Payment.Status status) {
         List<Payment> byStatus = paymentService.findByStatus(status);
         return ResponseEntity.ok(paymentMapper.toPaymentDtoList(byStatus));
     }
 
     @GetMapping("/{userId}/")
+    @PreAuthorize("@authenticationServiceImpl.adminRole(authentication) or @authenticationServiceImpl.isSelf(#userId, authentication)")
     public ResponseEntity<TotalSumDto> getTotalSumForUser(@PathVariable Long userId,
                                                          @RequestParam LocalDateTime from,
                                                          @RequestParam LocalDateTime to) {
@@ -63,8 +65,9 @@ public class PaymentController {
         return ResponseEntity.ok().body(totalSumForUser);
     }
     @GetMapping("/")
+    @PreAuthorize("@authenticationServiceImpl.adminRole(authentication)")
     public ResponseEntity<TotalSumDto> getTotalSumForUser(@RequestParam LocalDateTime from,
-                                                         @RequestParam LocalDateTime to) {
+                                                          @RequestParam LocalDateTime to) {
         TotalSumDto totalSumForAllUsers = paymentService.getTotalSumForAllUsers(from, to);
         return ResponseEntity.ok().body(totalSumForAllUsers);
     }
