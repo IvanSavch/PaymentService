@@ -85,6 +85,8 @@ public class PaymentIntegrationTest {
 
         registry.add("random.service.url", () -> "http://localhost:8089");
         registry.add("order.service.url", () -> "http://localhost:8089");
+        registry.add("mongodb.url", mongoDBContainer::getReplicaSetUrl);
+
     }
 
     @BeforeEach
