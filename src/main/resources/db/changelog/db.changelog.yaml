@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Ivan
+      changes:
+        - createCollection:
+            collectionName: payments
+
+  - changeSet:
+      id: 2
+      author: Ivan
+      changes:
+        - createIndex:
+            collectionName: payments
+            indexName: idx_order_id
+            keys: '{orderId: 1}'
+            options: '{"name": "idx_order_id"}'
+
+  - changeSet:
+      id: 3
+      author: Ivan
+      changes:
+        - createIndex:
+            collectionName: payments
+            indexName: idx_user_id
+            keys: '{userId: 1}'
+            options: '{"name": "idx_user_id"}'
+
+  - changeSet:
+      id: 4
+      author: Ivan
+      changes:
+        - createIndex:
+            collectionName: payments
+            indexName: idx_status
+            keys: '{status: 1}'
+            options: '{"name": "idx_status"}'
