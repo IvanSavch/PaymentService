@@ -30,6 +30,7 @@ public class PaymentController {
     }
 
     @PostMapping("/")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<PaymentDto>> createPayment() {
         List<Payment> payment = paymentService.createPayment();
         return ResponseEntity.status(HttpStatus.CREATED).body(paymentMapper.toPaymentDtoList(payment));
@@ -49,9 +50,9 @@ public class PaymentController {
         return ResponseEntity.ok(paymentMapper.toPaymentDtoList(byOrderId));
     }
 
-    @GetMapping("/status/{status}")
+    @GetMapping("/status/")
     @PreAuthorize("@authenticationServiceImpl.adminRole(authentication)")
-    public ResponseEntity<List<PaymentDto>> findByStatus(@PathVariable("status") Payment.Status status) {
+    public ResponseEntity<List<PaymentDto>> findByStatus(@RequestParam("status") Payment.Status status) {
         List<Payment> byStatus = paymentService.findByStatus(status);
         return ResponseEntity.ok(paymentMapper.toPaymentDtoList(byStatus));
     }
@@ -66,8 +67,8 @@ public class PaymentController {
     }
     @GetMapping("/")
     @PreAuthorize("@authenticationServiceImpl.adminRole(authentication)")
-    public ResponseEntity<TotalSumDto> getTotalSumForUser(@RequestParam LocalDateTime from,
-                                                          @RequestParam LocalDateTime to) {
+    public ResponseEntity<TotalSumDto> getTotalSumForAllUsers(@RequestParam LocalDateTime from,
+                                                              @RequestParam LocalDateTime to) {
         TotalSumDto totalSumForAllUsers = paymentService.getTotalSumForAllUsers(from, to);
         return ResponseEntity.ok().body(totalSumForAllUsers);
     }

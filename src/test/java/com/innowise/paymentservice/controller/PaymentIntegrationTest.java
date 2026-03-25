@@ -2,11 +2,11 @@ package com.innowise.paymentservice.controller;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.innowise.paymentservice.client.OrderClient;
+import com.innowise.paymentservice.client.RandomClient;
 import com.innowise.paymentservice.mapper.PaymentMapper;
 import com.innowise.paymentservice.model.dto.PaymentDto;
-import com.innowise.paymentservice.model.dto.TotalSumDto;
 import com.innowise.paymentservice.model.entity.Payment;
-import com.innowise.paymentservice.service.PaymentService;
+import com.innowise.paymentservice.repository.PaymentRepository;
 import com.innowise.paymentservice.service.impl.AuthenticationServiceImpl;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -59,10 +59,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 public class PaymentIntegrationTest {
+
     @MockitoBean
-    private PaymentService paymentService;
+    private RandomClient randomClient;
     @MockitoBean
     private OrderClient orderClient;
+    @Autowired
+    private PaymentRepository paymentRepository;
     @MockitoBean
     private PaymentMapper paymentMapper;
     @MockitoBean
@@ -124,9 +127,6 @@ public class PaymentIntegrationTest {
         paymentDto.setStatus(payment.getStatus());
         paymentDto.setPaymentAmount(payment.getPaymentAmount());
 
-        when(paymentService.findAllByUserId(1L)).thenReturn(List.of(payment));
-        when(paymentService.findAllByOrderId(100L)).thenReturn(List.of(payment));
-        when(paymentService.findByStatus(Payment.Status.FAILED)).thenReturn(List.of(payment));
 
         when(paymentMapper.toPaymentDtoList(any())).thenReturn(List.of(paymentDto));
     }
@@ -188,7 +188,6 @@ public class PaymentIntegrationTest {
 
         Mockito.when(authenticationServiceImpl.isSelf(Mockito.eq(1L), Mockito.any(Authentication.class)))
                 .thenReturn(true);
-        Mockito.when(paymentService.findAllByUserId(1L)).thenReturn(List.of(payment));
         Mockito.when(paymentMapper.toPaymentDtoList(List.of(payment))).thenReturn(List.of(dto));
         Mockito.when(authenticationServiceImpl.adminRole(Mockito.any())).thenReturn(false);
 
@@ -217,7 +216,7 @@ public class PaymentIntegrationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void testFindByStatus() throws Exception {
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/payments/status/FAILED")
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/payments/status/?status=FAILED")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].userId").value(1))
@@ -229,28 +228,28 @@ public class PaymentIntegrationTest {
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
     void testGetTotalSumForUserById() throws Exception {
-        Long userId = 1L;
+        Payment payment = new Payment();
+        payment.setUserId(1L);
+        payment.setOrderId(100L);
+        payment.setStatus(Payment.Status.FAILED);
+        payment.setPaymentAmount(new BigDecimal("150.0"));
+        payment.setTimestamp(LocalDateTime.of(2026, 3, 15, 12, 0));
+        paymentRepository.save(payment);
         LocalDateTime from = LocalDateTime.of(2026, 3, 1, 0, 0);
         LocalDateTime to = LocalDateTime.of(2026, 3, 31, 23, 59);
 
-        TotalSumDto totalSumDto = new TotalSumDto();
-        totalSumDto.setUserId(userId);
-        totalSumDto.setTotal(new BigDecimal("150.0"));
-
-        Mockito.when(authenticationServiceImpl.isSelf(Mockito.eq(userId), Mockito.any(Authentication.class)))
+        Mockito.when(authenticationServiceImpl.isSelf(Mockito.eq(payment.getUserId()), Mockito.any(Authentication.class)))
                 .thenReturn(true);
         Mockito.when(authenticationServiceImpl.adminRole(Mockito.any(Authentication.class)))
                 .thenReturn(false);
 
-        Mockito.when(paymentService.getTotalSumForUser(userId, from, to))
-                .thenReturn(totalSumDto);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/payments/{userId}/", userId)
+        mockMvc.perform(MockMvcRequestBuilders.get("/payments/{userId}/", payment.getUserId())
                         .param("from", from.toString())
                         .param("to", to.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(userId))
+                .andExpect(jsonPath("$.userId").value(payment.getUserId()))
                 .andExpect(jsonPath("$.total").value(150.0));
     }
 
@@ -260,19 +259,15 @@ public class PaymentIntegrationTest {
         LocalDateTime from = LocalDateTime.of(2026, 3, 1, 0, 0);
         LocalDateTime to = LocalDateTime.of(2026, 3, 31, 23, 59);
 
-        TotalSumDto totalSumDto = new TotalSumDto();
-        totalSumDto.setTotal(new BigDecimal("1000"));
-
         Mockito.when(authenticationServiceImpl.adminRole(Mockito.any(Authentication.class)))
                 .thenReturn(true);
-        Mockito.when(paymentService.getTotalSumForAllUsers(from, to))
-                .thenReturn(totalSumDto);
+
 
         mockMvc.perform(MockMvcRequestBuilders.get("/payments/")
                         .param("from", from.toString())
                         .param("to", to.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(1000.0));
+                .andExpect(jsonPath("$.total").value(150.0));
     }
 }

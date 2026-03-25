@@ -34,4 +34,4 @@ databaseChangeLog:
             collectionName: payments
             indexName: idx_status
             keys: '{status: 1}'
-            options: '{"name": "idx_status_id"}'
+            options: '{"name": "idx_status"}'

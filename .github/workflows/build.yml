@@ -1,4 +1,4 @@
-name: user service CI pipeline
+name: payment service CI pipeline
 on:
   push:
     branches: [ main , tasks/PMS-0]

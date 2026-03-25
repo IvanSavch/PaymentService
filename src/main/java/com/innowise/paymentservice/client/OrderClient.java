@@ -1,5 +1,6 @@
 package com.innowise.paymentservice.client;
 
+import com.innowise.paymentservice.exception.ResourceNotFoundException;
 import com.innowise.paymentservice.exception.ServiceUnavailableException;
 import com.innowise.paymentservice.model.dto.OrderDto;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -35,6 +36,9 @@ public class OrderClient {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
+        if (collect.isEmpty()){
+            throw new ResourceNotFoundException("Role is empty");
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.set(USER_ID_HEADER,userId.toString());
         headers.set(USER_ROLES_HEADER,collect.getFirst());

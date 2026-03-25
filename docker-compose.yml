@@ -17,7 +17,6 @@ services:
     ports:
       - "8084:8084"
 
-
   payment_db:
     image: mongo:7
     container_name: payment_db
@@ -42,3 +41,113 @@ services:
       - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_NUM_PARTITIONS=3
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+  userservice:
+    build: ../UserService
+    container_name: user_service
+    depends_on:
+      - user_db
+      - redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://user_db:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    ports:
+      - "8081:8081"
+    networks:
+      - my_network
+  user_db:
+    image: postgres
+    container_name: user_db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - my_network
+  redis:
+    image: redis
+    container_name: redis
+    networks:
+      - my_network
+
+  authenticationservice:
+    build: ../AuthenticationService
+    container_name: authentication_service
+    depends_on:
+      - authentication_db
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://authentication_db:5432/authentication
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - USER_SERVICE_URL=${USER_SERVICE_URL_DOCKER}
+    ports:
+      - "8082:8082"
+    networks:
+      - my_network
+  authentication_db:
+    image: postgres
+    container_name: authentication_db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME_AUTH}
+    networks:
+      - my_network
+
+  orderservice:
+    build: ../OrderService
+    container_name: order_service
+    depends_on:
+      - order_service_db
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://order_service_db:5432/order_service
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - USER_SERVICE_URL=${USER_SERVICE_URL_DOCKER}
+    ports:
+      - "8083:8083"
+    networks:
+      - my_network
+  order_service_db:
+    image: postgres
+    container_name: order_service_db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME_ORDER}
+    networks:
+      - my_network
+
+  gateway-service:
+    container_name: gateway_service
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - ORDER_SERVICE_URL=http://orderservice:8083
+      - AUTH_SERVICE_URL=http://authenticationservice:8082
+      - USER_SERVICE_URL_DOCKER=http://userservice:8081
+      - PAYMENT_SERVICE_URL=http://payment-service:8084
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+    depends_on:
+      - authenticationservice
+      - userservice
+      - orderservice
+      - payment-service
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge

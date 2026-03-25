@@ -32,9 +32,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     public List<Payment> createPayment() {
-        int random = randomClient.random();
+
         List<Payment> paymentFromOrderDtoList = paymentMapper.toPaymentFromOrderDtoList(orderClient.findOrderByUserId());
         for (Payment payment : paymentFromOrderDtoList) {
+            int random = randomClient.random();
             payment.setTimestamp(LocalDateTime.now());
             if (random % 2 == 0) {
                 payment.setStatus(Payment.Status.SUCCESS);

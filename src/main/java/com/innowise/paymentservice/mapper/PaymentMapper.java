@@ -11,7 +11,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface PaymentMapper {
     Payment toPayment(PaymentDto paymentDto);
-    @Mapping(target = "time",source = "timestamp")
+
     PaymentDto toPaymentDto(Payment payment);
 
     List<PaymentDto> toPaymentDtoList(List<Payment> payments);
